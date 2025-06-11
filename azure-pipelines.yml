@@ -1,19 +1,13 @@
 # azure-pipelines.yml
 
 trigger:
-  - main  # or master, depending on your branch
+  - main  # Make sure this matches your actual branch name
 
 pool:
-  vmImage: 'windows-latest'  # use 'ubuntu-latest' for Linux
+  vmImage: 'windows-latest'  # Or 'ubuntu-latest' for Linux
 
 steps:
-  - task: Checkout@1
-    displayName: 'Checkout code'
+  - checkout: self  # Correct way to checkout code
 
-  - script: echo Hello, Azure DevOps Pipeline!
-    displayName: 'Run a simple test script'
-
-  - script: |
-      echo Running additional tasks...
-      dir
-    displayName: 'List files in workspace'
+  - script: echo "Hello, Azure DevOps!"
+    displayName: 'Say Hello'
