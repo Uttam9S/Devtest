@@ -1,13 +1,8 @@
-# azure-pipelines.yml
-
 trigger:
-  - main  # Make sure this matches your actual branch name
+  - main
 
 pool:
-  vmImage: 'windows-latest'  # Or 'ubuntu-latest' for Linux
+  name: 'Default'  # Replace with your self-hosted agent pool name
 
 steps:
-  - checkout: self  # Correct way to checkout code
-
-  - script: echo "Hello, Azure DevOps!"
-    displayName: 'Say Hello'
+  - script: echo "Hello from self-hosted agent!"
