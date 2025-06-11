@@ -1,19 +1,19 @@
-# Starter pipeline
-# Start with a minimal pipeline that you can customize to build and deploy your code.
-# Add steps that build, run tests, deploy, and more:
-# https://aka.ms/yaml
+# azure-pipelines.yml
 
 trigger:
-- main
+  - main  # or master, depending on your branch
 
 pool:
-  vmImage: ubuntu-latest
+  vmImage: 'windows-latest'  # use 'ubuntu-latest' for Linux
 
 steps:
-- script: echo Hello, world!
-  displayName: 'Run a one-line script'
+  - task: Checkout@1
+    displayName: 'Checkout code'
 
-- script: |
-    echo Add other tasks to build, test, and deploy your project.
-    echo See https://aka.ms/yaml
-  displayName: 'Run a multi-line script'
+  - script: echo Hello, Azure DevOps Pipeline!
+    displayName: 'Run a simple test script'
+
+  - script: |
+      echo Running additional tasks...
+      dir
+    displayName: 'List files in workspace'
