@@ -2,7 +2,7 @@ trigger:
   - main
 
 pool:
-  name: 'Default'  # Replace with your self-hosted agent pool name
+  name: 'Azure Pipelines'  # Replace with your self-hosted agent pool name
 
 steps:
   - script: echo "Hello from self-hosted agent!"
