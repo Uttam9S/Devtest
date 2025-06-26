@@ -3,61 +3,49 @@ trigger:
     include:
       - main
 
+pool: myagent
+
 variables:
-  azureContainerRegistry: <youracr>.azurecr.io
-  backendImageName: youtube-backend
-  frontendImageName: youtube-frontend
-  kubernetesNamespace: youtube-clone
+  imageName: yourdockerhub/your-app
+  imageTag: latest
+  kubernetesNamespace: default
 
 stages:
 - stage: BuildAndPush
-  displayName: Build and Push Docker Images
+  displayName: Build and Push Docker Image
   jobs:
-  - job: DockerBuild
-    displayName: Build and Push
-    pool: myagent
+  - job: Build
     steps:
     - task: Docker@2
-      displayName: Login to ACR
+      displayName: Login to Docker Hub
       inputs:
         command: login
-        containerRegistry: '<ACR-SERVICE-CONNECTION>'
+        containerRegistry: 'DockerHubConnection'  # Created in Service Connections
 
     - task: Docker@2
-      displayName: Build and Push Backend
+      displayName: Build and Push Image
       inputs:
         command: buildAndPush
-        repository: $(backendImageName)
-        dockerfile: backend/Dockerfile
-        containerRegistry: '<ACR-SERVICE-CONNECTION>'
-        tags: latest
-
-    - task: Docker@2
-      displayName: Build and Push Frontend
-      inputs:
-        command: buildAndPush
-        repository: $(frontendImageName)
-        dockerfile: frontend/Dockerfile
-        containerRegistry: '<ACR-SERVICE-CONNECTION>'
-        tags: latest
+        containerRegistry: 'DockerHubConnection'
+        repository: $(imageName)
+        dockerfile: Dockerfile
+        tags: |
+          $(imageTag)
 
 - stage: Deploy
   displayName: Deploy to AKS
   dependsOn: BuildAndPush
   jobs:
   - job: DeployToAKS
-    displayName: Apply K8s YAML
-    pool:
-      vmImage: 'ubuntu-latest'
     steps:
     - task: Kubernetes@1
-      displayName: Set K8s Context
+      displayName: Deploy App to AKS
       inputs:
         connectionType: 'Azure Resource Manager'
-        azureSubscription: '<AZURE-RM-SERVICE-CONNECTION>'
-        azureResourceGroup: '<YOUR-RESOURCE-GROUP>'
-        kubernetesCluster: '<YOUR-AKS-CLUSTER>'
-        namespace: $(kubernetesNamespace)
+        azureSubscription: '7e233b7e-6e60-4c6d-b626-4fc3ac013b6f'
+        azureResourceGroup: 'Raj'
+        kubernetesCluster: '<Your-AKS-Cluster>'
+        namespace: defualt
         command: apply
         useConfigurationFile: true
-        configuration: 'k8s/youtube-app.yaml'
+        configuration: custom-app.yaml
