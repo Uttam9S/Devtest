@@ -6,7 +6,7 @@ trigger:
 pool: myagent
 
 variables:
-  imageName: yourdockerhub/your-app
+  imageName: uttam198/docker
   imageTag: latest
   kubernetesNamespace: default
 
