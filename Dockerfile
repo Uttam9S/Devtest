@@ -1,7 +1,5 @@
-FROM node:18
+FROM mcr.microsoft.com/dotnet/aspnet:6.0
 WORKDIR /app
-COPY package*.json ./
-RUN npm install
-COPY . .
-EXPOSE 3000
-CMD [ "node", "server.js" ]
+COPY . ./
+EXPOSE 80
+ENTRYPOINT ["dotnet", "YourApp.dll"]
