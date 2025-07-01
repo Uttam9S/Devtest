@@ -42,7 +42,7 @@ stages:
       displayName: Deploy App to AKS
       inputs:
         connectionType: 'Azure Resource Manager'
-        azureSubscription: '7e233b7e-6e60-4c6d-b626-4fc3ac013b6f'
+        azureSubscriptionEndpoint: 'My-Azure-Connection'
         azureResourceGroup: 'Raj'
         kubernetesCluster: '<Your-AKS-Cluster>'
         namespace: defualt
