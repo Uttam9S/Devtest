@@ -41,8 +41,8 @@ stages:
     - task: Kubernetes@1
       displayName: Deploy App to AKS
       inputs:
-        connectionType: 'Azure Resource Manager'
-        azureSubscriptionEndpoint: 'AzureRM-DevOp'
+        connectionType: 'Kubernetes Service Connection'
+        kubernetesServiceEndpoint: 'AKS'
         azureResourceGroup: 'Raj'
         kubernetesCluster: 'aks'
         namespace: default
