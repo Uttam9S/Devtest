@@ -44,7 +44,7 @@ stages:
         connectionType: 'Azure Resource Manager'
         azureSubscriptionEndpoint: 'AzureRM-DevOp'
         azureResourceGroup: 'Raj'
-        #kubernetesCluster: 'aksno'
+        kubernetesCluster: 'aks'
         namespace: default
         command: apply
         useConfigurationFile: true
