@@ -44,8 +44,8 @@ stages:
         connectionType: 'Azure Resource Manager'
         azureSubscriptionEndpoint: 'AzureRM-DevOp'
         azureResourceGroup: 'Raj'
-        kubernetesCluster: '<Your-AKS-Cluster>'
-        namespace: defualt
+        #kubernetesCluster: '<Your-AKS-Cluster>'
+        namespace: default
         command: apply
         useConfigurationFile: true
         configuration: custom-app.yaml
