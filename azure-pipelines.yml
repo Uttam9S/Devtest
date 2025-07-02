@@ -6,7 +6,7 @@ trigger:
 pool: myagent
 
 variables:
-  imageName: yourdockerhub/your-app
+  imageName: uttam198/docker
   imageTag: latest
   kubernetesNamespace: default
 
@@ -41,11 +41,11 @@ stages:
     - task: Kubernetes@1
       displayName: Deploy App to AKS
       inputs:
-        connectionType: 'Azure Resource Manager'
-        azureSubscription: '7e233b7e-6e60-4c6d-b626-4fc3ac013b6f'
+        connectionType: 'Kubernetes Service Connection'
+        kubernetesServiceEndpoint: 'AKS'
         azureResourceGroup: 'Raj'
-        kubernetesCluster: '<Your-AKS-Cluster>'
-        namespace: defualt
+        kubernetesCluster: 'aks'
+        namespace: default
         command: apply
         useConfigurationFile: true
         configuration: custom-app.yaml
