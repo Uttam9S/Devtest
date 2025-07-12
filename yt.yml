@@ -27,23 +27,25 @@ stages:
       steps:
         - checkout: self
 
-        # 🧭 Debug - Confirm repo root contents after checkout
-        - script: |
-            echo "=== Debug: Repo root contents ==="
-            dir $(Build.SourcesDirectory)
+        # ✅ Debug repo contents
+        - powershell: |
+            Write-Host "=== Repo root contents ==="
+            Get-ChildItem -Path "$(Build.SourcesDirectory)" -Recurse
           displayName: 'Debug: Show Repo Root Contents'
 
-        # 🧭 Debug - Confirm frontend folder exists before build
-        - script: |
-            echo "=== Debug: Frontend folder BEFORE build ==="
-            dir $(Build.SourcesDirectory)/frontend
-          displayName: 'Debug: Verify Frontend Folder Contents Before Build'
+        # ✅ Debug frontend folder before build
+        - powershell: |
+            Write-Host "=== Frontend folder BEFORE build ==="
+            Get-ChildItem -Path "$(Build.SourcesDirectory)\frontend" -Recurse
+          displayName: 'Debug: Verify Frontend Folder Before Build'
 
+        # ✅ Setup Node
         - task: NodeTool@0
           inputs:
             versionSpec: $(nodeVersion)
           displayName: 'Use Node.js $(nodeVersion)'
 
+        # ✅ Install and Build
         - script: |
             set -e
             npm install
@@ -51,21 +53,21 @@ stages:
           workingDirectory: '$(Build.SourcesDirectory)/frontend'
           displayName: 'Install and Build Frontend'
 
-        # 🧭 Debug - Confirm build folder was created
-        - script: |
-            echo "=== Debug: Frontend folder AFTER build ==="
-            dir $(Build.SourcesDirectory)/frontend
-            echo "=== Debug: Build folder (should exist) ==="
-            dir $(Build.SourcesDirectory)/frontend/build
+        # ✅ Debug frontend after build
+        - powershell: |
+            Write-Host "=== Frontend folder AFTER build ==="
+            Get-ChildItem -Path "$(Build.SourcesDirectory)\frontend" -Recurse
+            Write-Host "=== Build folder (should exist) ==="
+            Get-ChildItem -Path "$(Build.SourcesDirectory)\frontend\build" -Recurse
           displayName: 'Debug: Show Frontend Build Folder'
           continueOnError: true
 
+        # ✅ Publish frontend build
         - task: PublishBuildArtifacts@1
           inputs:
             pathToPublish: '$(Build.SourcesDirectory)/frontend/build'
             artifactName: 'frontend'
           displayName: 'Publish Frontend Build Artifact'
-
 
 # 2️⃣ Build Backend
 - stage: Build_Backend
@@ -77,18 +79,20 @@ stages:
       steps:
         - checkout: self
 
-        # 🧭 Debug - Confirm backend folder exists before build
-        - script: |
-            echo "=== Debug: Backend folder BEFORE build ==="
-            dir $(Build.SourcesDirectory)/backend
-          displayName: 'Debug: Verify Backend Folder Contents Before Build'
+        # ✅ Debug backend folder before build
+        - powershell: |
+            Write-Host "=== Backend folder BEFORE build ==="
+            Get-ChildItem -Path "$(Build.SourcesDirectory)\backend" -Recurse
+          displayName: 'Debug: Verify Backend Folder Before Build'
 
+        # ✅ Setup .NET
         - task: UseDotNet@2
           inputs:
             packageType: 'sdk'
             version: $(dotnetVersion)
           displayName: 'Use .NET $(dotnetVersion)'
 
+        # ✅ Restore, Build, Publish
         - script: |
             set -e
             dotnet restore
@@ -97,21 +101,21 @@ stages:
           workingDirectory: '$(Build.SourcesDirectory)/backend'
           displayName: 'Build and Publish Backend'
 
-        # 🧭 Debug - Confirm publish folder was created
-        - script: |
-            echo "=== Debug: Backend folder AFTER publish ==="
-            dir $(Build.SourcesDirectory)/backend
-            echo "=== Debug: Publish folder (should exist) ==="
-            dir $(Build.SourcesDirectory)/backend/publish
+        # ✅ Debug backend after publish
+        - powershell: |
+            Write-Host "=== Backend folder AFTER publish ==="
+            Get-ChildItem -Path "$(Build.SourcesDirectory)\backend" -Recurse
+            Write-Host "=== Publish folder (should exist) ==="
+            Get-ChildItem -Path "$(Build.SourcesDirectory)\backend\publish" -Recurse
           displayName: 'Debug: Show Backend Publish Folder'
           continueOnError: true
 
+        # ✅ Publish backend build
         - task: PublishBuildArtifacts@1
           inputs:
             pathToPublish: '$(Build.SourcesDirectory)/backend/publish'
             artifactName: 'backend'
           displayName: 'Publish Backend Build Artifact'
-
 
 # 3️⃣ Deploy Frontend
 - stage: Deploy_Frontend
@@ -128,6 +132,7 @@ stages:
             steps:
               - download: current
                 artifact: frontend
+                displayName: 'Download Frontend Artifact'
 
               - task: AzureWebApp@1
                 inputs:
@@ -135,7 +140,6 @@ stages:
                   appName: $(frontendAppName)
                   package: '$(Pipeline.Workspace)/frontend'
                 displayName: 'Deploy Frontend to Azure App Service'
-
 
 # 4️⃣ Deploy Backend
 - stage: Deploy_Backend
@@ -152,6 +156,7 @@ stages:
             steps:
               - download: current
                 artifact: backend
+                displayName: 'Download Backend Artifact'
 
               - task: AzureWebApp@1
                 inputs:
