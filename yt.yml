@@ -152,7 +152,7 @@ stages:
 
               - task: AzureWebApp@1
                 inputs:
-                  azureSubscription: 'AzureRM-devop'
+                  azureSubscription: 'AzureRM-Devop'
                   appName: $(frontendAppName)
                   package: '$(Pipeline.Workspace)/frontend'
                 displayName: 'Deploy Frontend to Azure App Service'
@@ -179,7 +179,7 @@ stages:
 
               - task: AzureWebApp@1
                 inputs:
-                  azureSubscription: 'AzureRM-devop'
+                  azureSubscription: 'AzureRM-Devop'
                   appName: $(backendAppName)
                   package: '$(Pipeline.Workspace)/backend'
                 displayName: 'Deploy Backend to Azure App Service'
