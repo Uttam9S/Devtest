@@ -32,7 +32,7 @@ stages:
           displayName: 'Use Node.js $(nodeVersion)'
 
         - script: |
-            cd 'C:\Users\Uttam\Desktop\Azure\agent\_work\3\s\frontend'
+            cd C:\Users\Uttam\Desktop\Azure\agent\_work\3\s\frontend
             npm install
             npm run build
           displayName: 'Install and Build Frontend'
@@ -58,7 +58,7 @@ stages:
           displayName: 'Use .NET $(dotnetVersion)'
 
         - script: |
-            cd 'C:\Users\Uttam\Desktop\Azure\agent\_work\3\s\backend'
+            cd C:\Users\Uttam\Desktop\Azure\agent\_work\3\s\backend
             dotnet restore
             dotnet build --configuration Release
             dotnet publish -c Release -o publish
