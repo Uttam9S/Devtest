@@ -7,7 +7,6 @@ variables:
   # Azure App Service Names
   frontendAppName: "youtube-clone-frontend"
   backendAppName: "youtube-clone-backend"
-  Build.SourcesDirectory: 'C:\Users\Uttam\Desktop\Azure\agent\_work\1\s'
 
   # Azure Resource Group
   resourceGroup: "Raj"
@@ -23,7 +22,8 @@ stages:
   displayName: Build Frontend
   jobs:
     - job: BuildReactApp
-      pool: 'Myagent'
+      pool:
+        name: 'Myagent'
       steps:
         - checkout: self
 
@@ -33,22 +33,24 @@ stages:
           displayName: 'Use Node.js $(nodeVersion)'
 
         - script: |
-            cd $(Build.SourcesDirectory)/frontend
             npm install
             npm run build
+          workingDirectory: '$(Build.SourcesDirectory)/frontend'
           displayName: 'Install and Build Frontend'
 
         - task: PublishBuildArtifacts@1
           inputs:
-            pathToPublish: 'frontend/build'
+            pathToPublish: '$(Build.SourcesDirectory)/frontend/build'
             artifactName: 'frontend'
+          displayName: 'Publish Frontend Build Artifact'
 
 # 2️⃣ Build Backend
 - stage: Build_Backend
   displayName: Build Backend
   jobs:
     - job: BuildBackend
-      pool: 'Myagent'
+      pool:
+        name: 'Myagent'
       steps:
         - checkout: self
 
@@ -59,16 +61,17 @@ stages:
           displayName: 'Use .NET $(dotnetVersion)'
 
         - script: |
-            cd $(Build.SourcesDirectory)/backend
             dotnet restore
             dotnet build --configuration Release
             dotnet publish -c Release -o publish
+          workingDirectory: '$(Build.SourcesDirectory)/backend'
           displayName: 'Build and Publish Backend'
 
         - task: PublishBuildArtifacts@1
           inputs:
-            pathToPublish: 'backend/publish'
+            pathToPublish: '$(Build.SourcesDirectory)/backend/publish'
             artifactName: 'backend'
+          displayName: 'Publish Backend Build Artifact'
 
 # 3️⃣ Deploy Frontend
 - stage: Deploy_Frontend
@@ -77,7 +80,8 @@ stages:
   jobs:
     - deployment: DeployReactApp
       environment: 'production'
-      pool: 'Myagent'
+      pool:
+        name: 'Myagent'
       strategy:
         runOnce:
           deploy:
@@ -99,7 +103,8 @@ stages:
   jobs:
     - deployment: DeployApi
       environment: 'production'
-      pool: 'Myagent'
+      pool:
+        name: 'Myagent'
       strategy:
         runOnce:
           deploy:
