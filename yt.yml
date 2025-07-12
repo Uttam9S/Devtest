@@ -4,7 +4,7 @@ trigger:
       - main
 
 variables:
-  # Azure App Service Names
+  # App Service Names
   frontendAppName: "youtube-clone-frontend"
   backendAppName: "youtube-clone-backend"
 
@@ -17,7 +17,9 @@ variables:
 
 stages:
 
+########################
 # 1️⃣ Build Frontend
+########################
 - stage: Build_Frontend
   displayName: Build Frontend
   jobs:
@@ -27,49 +29,53 @@ stages:
       steps:
         - checkout: self
 
-        # ✅ Debug repo contents
+        # Debug Repo
         - powershell: |
-            Write-Host "=== Repo root contents ==="
+            Write-Host "=== REPO CONTENTS ==="
             Get-ChildItem -Path "$(Build.SourcesDirectory)" -Recurse
-          displayName: 'Debug: Show Repo Root Contents'
+          displayName: 'Debug: Show Repo Contents'
 
-        # ✅ Debug frontend folder before build
+        # Check Frontend Folder
         - powershell: |
-            Write-Host "=== Frontend folder BEFORE build ==="
+            Write-Host "=== FRONTEND FOLDER ==="
             Get-ChildItem -Path "$(Build.SourcesDirectory)\frontend" -Recurse
-          displayName: 'Debug: Verify Frontend Folder Before Build'
+          displayName: 'Debug: Verify Frontend Folder'
 
-        # ✅ Setup Node
+        # Setup Node
         - task: NodeTool@0
           inputs:
             versionSpec: $(nodeVersion)
           displayName: 'Use Node.js $(nodeVersion)'
 
-        # ✅ Install and Build
+        # Install and Build
         - script: |
-            set -e
             npm install
             npm run build
           workingDirectory: '$(Build.SourcesDirectory)/frontend'
           displayName: 'Install and Build Frontend'
 
-        # ✅ Debug frontend after build
+        # Verify Build Folder
         - powershell: |
-            Write-Host "=== Frontend folder AFTER build ==="
-            Get-ChildItem -Path "$(Build.SourcesDirectory)\frontend" -Recurse
-            Write-Host "=== Build folder (should exist) ==="
-            Get-ChildItem -Path "$(Build.SourcesDirectory)\frontend\build" -Recurse
-          displayName: 'Debug: Show Frontend Build Folder'
+            Write-Host "=== FRONTEND BUILD FOLDER ==="
+            if (Test-Path "$(Build.SourcesDirectory)\frontend\build") {
+                Get-ChildItem -Path "$(Build.SourcesDirectory)\frontend\build" -Recurse
+            } else {
+                Write-Error "ERROR: Frontend build folder does not exist!"
+            }
+          displayName: 'Debug: Verify Frontend Build Output'
           continueOnError: true
 
-        # ✅ Publish frontend build
+        # Publish Frontend
         - task: PublishBuildArtifacts@1
           inputs:
             pathToPublish: '$(Build.SourcesDirectory)/frontend/build'
             artifactName: 'frontend'
           displayName: 'Publish Frontend Build Artifact'
 
+
+########################
 # 2️⃣ Build Backend
+########################
 - stage: Build_Backend
   displayName: Build Backend
   jobs:
@@ -79,45 +85,55 @@ stages:
       steps:
         - checkout: self
 
-        # ✅ Debug backend folder before build
+        # Debug Backend Folder
         - powershell: |
-            Write-Host "=== Backend folder BEFORE build ==="
+            Write-Host "=== BACKEND FOLDER ==="
             Get-ChildItem -Path "$(Build.SourcesDirectory)\Backend" -Recurse
           displayName: 'Debug: Verify Backend Folder Before Build'
 
-        # ✅ Setup .NET
+        # Locate .csproj
+        - powershell: |
+            Write-Host "=== SEARCHING FOR .csproj ==="
+            Get-ChildItem -Path "$(Build.SourcesDirectory)\Backend" -Recurse -Filter *.csproj
+          displayName: 'Debug: Find .csproj in Backend'
+
+        # Use .NET SDK
         - task: UseDotNet@2
           inputs:
             packageType: 'sdk'
             version: $(dotnetVersion)
           displayName: 'Use .NET $(dotnetVersion)'
 
-        # ✅ Restore, Build, Publish
+        # Build and Publish
         - script: |
-            set -e
             dotnet restore
             dotnet build --configuration Release
-            dotnet publish -c Release -o publish
+            dotnet publish -c Release -o $(Build.SourcesDirectory)/Backend/publish
           workingDirectory: '$(Build.SourcesDirectory)/Backend/MyApiProject'
           displayName: 'Build and Publish Backend'
 
-        # ✅ Debug backend after publish
+        # Verify Publish Output
         - powershell: |
-            Write-Host "=== Backend folder AFTER publish ==="
-            Get-ChildItem -Path "$(Build.SourcesDirectory)\Backend" -Recurse
-            Write-Host "=== Publish folder (should exist) ==="
-            Get-ChildItem -Path "$(Build.SourcesDirectory)\Backend\publish" -Recurse
-          displayName: 'Debug: Show Backend Publish Folder'
+            Write-Host "=== BACKEND PUBLISH FOLDER ==="
+            if (Test-Path "$(Build.SourcesDirectory)\Backend\publish") {
+                Get-ChildItem -Path "$(Build.SourcesDirectory)\Backend\publish" -Recurse
+            } else {
+                Write-Error "ERROR: Backend publish folder does not exist!"
+            }
+          displayName: 'Debug: Verify Backend Publish Output'
           continueOnError: true
 
-        # ✅ Publish backend build
+        # Publish Backend Artifact
         - task: PublishBuildArtifacts@1
           inputs:
             pathToPublish: '$(Build.SourcesDirectory)/Backend/publish'
             artifactName: 'backend'
           displayName: 'Publish Backend Build Artifact'
 
+
+########################
 # 3️⃣ Deploy Frontend
+########################
 - stage: Deploy_Frontend
   displayName: Deploy Frontend
   dependsOn: Build_Frontend
@@ -141,7 +157,10 @@ stages:
                   package: '$(Pipeline.Workspace)/frontend'
                 displayName: 'Deploy Frontend to Azure App Service'
 
+
+########################
 # 4️⃣ Deploy Backend
+########################
 - stage: Deploy_Backend
   displayName: Deploy Backend
   dependsOn: Build_Backend
