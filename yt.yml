@@ -7,6 +7,7 @@ variables:
   # Azure App Service Names
   frontendAppName: "youtube-clone-frontend"
   backendAppName: "youtube-clone-backend"
+  Build.SourcesDirectory: 'C:\Users\Uttam\Desktop\Azure\agent\_work\1\s'
 
   # Azure Resource Group
   resourceGroup: "Raj"
@@ -32,7 +33,7 @@ stages:
           displayName: 'Use Node.js $(nodeVersion)'
 
         - script: |
-            cd frontend
+            cd $(Build.SourcesDirectory)/frontend
             npm install
             npm run build
           displayName: 'Install and Build Frontend'
@@ -58,7 +59,7 @@ stages:
           displayName: 'Use .NET $(dotnetVersion)'
 
         - script: |
-            cd backend
+            cd $(Build.SourcesDirectory)/backend
             dotnet restore
             dotnet build --configuration Release
             dotnet publish -c Release -o publish
