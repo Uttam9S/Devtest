@@ -27,22 +27,45 @@ stages:
       steps:
         - checkout: self
 
+        # 🧭 Debug - Confirm repo root contents after checkout
+        - script: |
+            echo "=== Debug: Repo root contents ==="
+            dir $(Build.SourcesDirectory)
+          displayName: 'Debug: Show Repo Root Contents'
+
+        # 🧭 Debug - Confirm frontend folder exists before build
+        - script: |
+            echo "=== Debug: Frontend folder BEFORE build ==="
+            dir $(Build.SourcesDirectory)/frontend
+          displayName: 'Debug: Verify Frontend Folder Contents Before Build'
+
         - task: NodeTool@0
           inputs:
             versionSpec: $(nodeVersion)
           displayName: 'Use Node.js $(nodeVersion)'
 
         - script: |
+            set -e
             npm install
             npm run build
           workingDirectory: '$(Build.SourcesDirectory)/frontend'
           displayName: 'Install and Build Frontend'
+
+        # 🧭 Debug - Confirm build folder was created
+        - script: |
+            echo "=== Debug: Frontend folder AFTER build ==="
+            dir $(Build.SourcesDirectory)/frontend
+            echo "=== Debug: Build folder (should exist) ==="
+            dir $(Build.SourcesDirectory)/frontend/build
+          displayName: 'Debug: Show Frontend Build Folder'
+          continueOnError: true
 
         - task: PublishBuildArtifacts@1
           inputs:
             pathToPublish: '$(Build.SourcesDirectory)/frontend/build'
             artifactName: 'frontend'
           displayName: 'Publish Frontend Build Artifact'
+
 
 # 2️⃣ Build Backend
 - stage: Build_Backend
@@ -54,6 +77,12 @@ stages:
       steps:
         - checkout: self
 
+        # 🧭 Debug - Confirm backend folder exists before build
+        - script: |
+            echo "=== Debug: Backend folder BEFORE build ==="
+            dir $(Build.SourcesDirectory)/backend
+          displayName: 'Debug: Verify Backend Folder Contents Before Build'
+
         - task: UseDotNet@2
           inputs:
             packageType: 'sdk'
@@ -61,17 +90,28 @@ stages:
           displayName: 'Use .NET $(dotnetVersion)'
 
         - script: |
+            set -e
             dotnet restore
             dotnet build --configuration Release
             dotnet publish -c Release -o publish
           workingDirectory: '$(Build.SourcesDirectory)/backend'
           displayName: 'Build and Publish Backend'
 
+        # 🧭 Debug - Confirm publish folder was created
+        - script: |
+            echo "=== Debug: Backend folder AFTER publish ==="
+            dir $(Build.SourcesDirectory)/backend
+            echo "=== Debug: Publish folder (should exist) ==="
+            dir $(Build.SourcesDirectory)/backend/publish
+          displayName: 'Debug: Show Backend Publish Folder'
+          continueOnError: true
+
         - task: PublishBuildArtifacts@1
           inputs:
             pathToPublish: '$(Build.SourcesDirectory)/backend/publish'
             artifactName: 'backend'
           displayName: 'Publish Backend Build Artifact'
+
 
 # 3️⃣ Deploy Frontend
 - stage: Deploy_Frontend
@@ -95,6 +135,7 @@ stages:
                   appName: $(frontendAppName)
                   package: '$(Pipeline.Workspace)/frontend'
                 displayName: 'Deploy Frontend to Azure App Service'
+
 
 # 4️⃣ Deploy Backend
 - stage: Deploy_Backend
