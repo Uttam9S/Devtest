@@ -82,7 +82,7 @@ stages:
         # ✅ Debug backend folder before build
         - powershell: |
             Write-Host "=== Backend folder BEFORE build ==="
-            Get-ChildItem -Path "$(Build.SourcesDirectory)\backend" -Recurse
+            Get-ChildItem -Path "$(Build.SourcesDirectory)\Backend" -Recurse
           displayName: 'Debug: Verify Backend Folder Before Build'
 
         # ✅ Setup .NET
@@ -98,22 +98,22 @@ stages:
             dotnet restore
             dotnet build --configuration Release
             dotnet publish -c Release -o publish
-          workingDirectory: '$(Build.SourcesDirectory)/backend/MyApiProject'
+          workingDirectory: '$(Build.SourcesDirectory)/Backend/MyApiProject'
           displayName: 'Build and Publish Backend'
 
         # ✅ Debug backend after publish
         - powershell: |
             Write-Host "=== Backend folder AFTER publish ==="
-            Get-ChildItem -Path "$(Build.SourcesDirectory)\backend" -Recurse
+            Get-ChildItem -Path "$(Build.SourcesDirectory)\Backend" -Recurse
             Write-Host "=== Publish folder (should exist) ==="
-            Get-ChildItem -Path "$(Build.SourcesDirectory)\backend\publish" -Recurse
+            Get-ChildItem -Path "$(Build.SourcesDirectory)\Backend\publish" -Recurse
           displayName: 'Debug: Show Backend Publish Folder'
           continueOnError: true
 
         # ✅ Publish backend build
         - task: PublishBuildArtifacts@1
           inputs:
-            pathToPublish: '$(Build.SourcesDirectory)/backend/publish'
+            pathToPublish: '$(Build.SourcesDirectory)/Backend/publish'
             artifactName: 'backend'
           displayName: 'Publish Backend Build Artifact'
 
