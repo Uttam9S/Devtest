@@ -98,7 +98,7 @@ stages:
             dotnet restore
             dotnet build --configuration Release
             dotnet publish -c Release -o publish
-          workingDirectory: '$(Build.SourcesDirectory)/backend'
+          workingDirectory: '$(Build.SourcesDirectory)/backend/MyApiproject'
           displayName: 'Build and Publish Backend'
 
         # ✅ Debug backend after publish
