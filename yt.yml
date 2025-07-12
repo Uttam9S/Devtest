@@ -22,7 +22,7 @@ stages:
   displayName: Build Frontend
   jobs:
     - job: BuildReactApp
-      pool:'Myagent'
+      pool: 'Myagent'
       steps:
         - checkout: self
 
@@ -76,7 +76,7 @@ stages:
   jobs:
     - deployment: DeployReactApp
       environment: 'production'
-      pool:'Myagent'
+      pool: 'Myagent'
       strategy:
         runOnce:
           deploy:
