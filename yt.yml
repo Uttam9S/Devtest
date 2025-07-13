@@ -6,7 +6,7 @@ trigger:
 variables:
   nodeVersion: '22.17.0'
   dotnetVersion: '8.0.412'
-  deployRoot: '\\MyServer\DeployShare'
+  deployRoot: 'C:\Users\Uttam\Desktop\Azure\Deployshare'
 
 stages:
 
