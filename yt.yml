@@ -4,22 +4,13 @@ trigger:
       - main
 
 variables:
-  # App Service Names
-  frontendAppName: "youtube-clone-frontend"
-  backendAppName: "youtube-clone-backend"
-
-  # Azure Resource Group
-  resourceGroup: "Raj"
-
-  # Node and .NET versions
   nodeVersion: '22.17.0'
   dotnetVersion: '8.0.412'
+  deployRoot: '\\MyServer\DeployShare'
 
 stages:
 
-########################
 # 1️⃣ Build Frontend
-########################
 - stage: Build_Frontend
   displayName: Build Frontend
   jobs:
@@ -35,47 +26,38 @@ stages:
             Get-ChildItem -Path "$(Build.SourcesDirectory)" -Recurse
           displayName: 'Debug: Show Repo Contents'
 
-        # Check Frontend Folder
-        - powershell: |
-            Write-Host "=== FRONTEND FOLDER ==="
-            Get-ChildItem -Path "$(Build.SourcesDirectory)\frontend" -Recurse
-          displayName: 'Debug: Verify Frontend Folder'
-
-        # Setup Node
         - task: NodeTool@0
           inputs:
             versionSpec: $(nodeVersion)
           displayName: 'Use Node.js $(nodeVersion)'
 
-        # Install and Build
         - script: |
             npm install
             npm run build
           workingDirectory: '$(Build.SourcesDirectory)/frontend'
           displayName: 'Install and Build Frontend'
 
-        # Verify Build Folder
+        # Debug Frontend Output
         - powershell: |
-            Write-Host "=== FRONTEND BUILD FOLDER ==="
             if (Test-Path "$(Build.SourcesDirectory)\frontend\build") {
-                Get-ChildItem -Path "$(Build.SourcesDirectory)\frontend\build" -Recurse
+              Write-Host "Build folder exists."
+              Get-ChildItem -Path "$(Build.SourcesDirectory)\frontend\build" -Recurse
             } else {
-                Write-Error "ERROR: Frontend build folder does not exist!"
+              Write-Error "Frontend build folder does not exist!"
             }
-          displayName: 'Debug: Verify Frontend Build Output'
+          displayName: 'Debug: Check Frontend Build Folder'
           continueOnError: true
 
-        # Publish Frontend
-        - task: PublishBuildArtifacts@1
+        # ✅ Copy frontend build output to file share
+        - task: CopyFiles@2
           inputs:
-            pathToPublish: '$(Build.SourcesDirectory)/frontend/build'
-            artifactName: 'frontend'
-          displayName: 'Publish Frontend Build Artifact'
+            SourceFolder: '$(Build.SourcesDirectory)/frontend/build'
+            Contents: '**'
+            TargetFolder: '$(deployRoot)\frontend'
+          displayName: 'Deploy Frontend to File Share'
 
 
-########################
 # 2️⃣ Build Backend
-########################
 - stage: Build_Backend
   displayName: Build Backend
   jobs:
@@ -85,26 +67,14 @@ stages:
       steps:
         - checkout: self
 
-        # Debug Backend Folder
-        - powershell: |
-            Write-Host "=== BACKEND FOLDER ==="
-            Get-ChildItem -Path "$(Build.SourcesDirectory)\Backend" -Recurse
-          displayName: 'Debug: Verify Backend Folder Before Build'
-
-        # Locate .csproj
-        - powershell: |
-            Write-Host "=== SEARCHING FOR .csproj ==="
-            Get-ChildItem -Path "$(Build.SourcesDirectory)\Backend" -Recurse -Filter *.csproj
-          displayName: 'Debug: Find .csproj in Backend'
-
-        # Use .NET SDK
+        # Use .NET
         - task: UseDotNet@2
           inputs:
             packageType: 'sdk'
             version: $(dotnetVersion)
           displayName: 'Use .NET $(dotnetVersion)'
 
-        # Build and Publish
+        # Build and publish backend
         - script: |
             dotnet restore
             dotnet build --configuration Release
@@ -112,74 +82,21 @@ stages:
           workingDirectory: '$(Build.SourcesDirectory)/Backend/MyApiProject'
           displayName: 'Build and Publish Backend'
 
-        # Verify Publish Output
+        # Debug Backend Output
         - powershell: |
-            Write-Host "=== BACKEND PUBLISH FOLDER ==="
             if (Test-Path "$(Build.SourcesDirectory)\Backend\publish") {
-                Get-ChildItem -Path "$(Build.SourcesDirectory)\Backend\publish" -Recurse
+              Write-Host "Publish folder exists."
+              Get-ChildItem -Path "$(Build.SourcesDirectory)\Backend\publish" -Recurse
             } else {
-                Write-Error "ERROR: Backend publish folder does not exist!"
+              Write-Error "Backend publish folder does not exist!"
             }
-          displayName: 'Debug: Verify Backend Publish Output'
+          displayName: 'Debug: Check Backend Publish Folder'
           continueOnError: true
 
-        # Publish Backend Artifact
-        - task: PublishBuildArtifacts@1
+        # ✅ Copy backend publish output to file share
+        - task: CopyFiles@2
           inputs:
-            pathToPublish: '$(Build.SourcesDirectory)/Backend/publish'
-            artifactName: 'backend'
-          displayName: 'Publish Backend Build Artifact'
-
-
-########################
-# 3️⃣ Deploy Frontend
-########################
-- stage: Deploy_Frontend
-  displayName: Deploy Frontend
-  dependsOn: Build_Frontend
-  jobs:
-    - deployment: DeployReactApp
-      environment: 'production'
-      pool:
-        name: 'Myagent'
-      strategy:
-        runOnce:
-          deploy:
-            steps:
-              - download: current
-                artifact: frontend
-                displayName: 'Download Frontend Artifact'
-
-              - task: AzureWebApp@1
-                inputs:
-                  azureSubscription: 'AzureRM-Devop'
-                  appName: $(frontendAppName)
-                  package: '$(Pipeline.Workspace)/frontend'
-                displayName: 'Deploy Frontend to Azure App Service'
-
-
-########################
-# 4️⃣ Deploy Backend
-########################
-- stage: Deploy_Backend
-  displayName: Deploy Backend
-  dependsOn: Build_Backend
-  jobs:
-    - deployment: DeployApi
-      environment: 'production'
-      pool:
-        name: 'Myagent'
-      strategy:
-        runOnce:
-          deploy:
-            steps:
-              - download: current
-                artifact: backend
-                displayName: 'Download Backend Artifact'
-
-              - task: AzureWebApp@1
-                inputs:
-                  azureSubscription: 'AzureRM-Devop'
-                  appName: $(backendAppName)
-                  package: '$(Pipeline.Workspace)/backend'
-                displayName: 'Deploy Backend to Azure App Service'
+            SourceFolder: '$(Build.SourcesDirectory)/Backend/publish'
+            Contents: '**'
+            TargetFolder: '$(deployRoot)\backend'
+          displayName: 'Deploy Backend to File Share'
